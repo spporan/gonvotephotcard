@@ -165,7 +165,7 @@
             <!-- User Photo Upload (Priority) -->
             <div class="flex flex-col items-center">
                 <label
-                    class="w-full flex flex-col items-center px-3 py-3 sm:py-4 bg-yellow-500 text-black rounded-lg shadow-lg text-sm sm:text-base uppercase cursor-pointer hover:bg-yellow-400 transition-all font-bold text-center ring-2 ring-yellow-500 ring-offset-2 ring-offset-black">
+                    class="w-full flex flex-col items-center px-3 py-3 sm:py-4 bg-yellow-500 text-black rounded-lg shadow-lg text-sm sm:text-base uppercase cursor-pointer hover:bg-yellow-400 transition-all font-bold text-center ring-2 ring-yellow-500 ring-offset-2 ring-offset-black relative">
                     <span class="flex items-center gap-2">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -174,7 +174,8 @@
                         </svg>
                         আপনার ছবি আপলোড করুন
                     </span>
-                    <input type='file' id="imageLoader" class="hidden" accept="image/*" />
+                    <input type='file' id="imageLoader" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        accept="image/*" />
                 </label>
             </div>
 
@@ -305,12 +306,11 @@
 
                 // Handle both click and touchend for better mobile response
                 const handleSelect = (e) => {
-                    e.preventDefault(); // Prevent double triggering
+                    if (e) e.preventDefault();
                     selectFrame(index);
                 };
 
                 frameBtn.onclick = handleSelect;
-                /* frameBtn.ontouchend = handleSelect; // Let default click handle it to avoid scroll issues */
                 // Relying on standard click which works fine on mobile if no overlay issues
 
                 const img = document.createElement('img');
@@ -349,12 +349,18 @@
 
         // Load frame from URL
         function loadFrameFromUrl(url) {
+            // Using a new image object ensures clean state
             const img = new Image();
             img.onload = () => {
                 frameImg = img;
                 render();
             };
+            img.onerror = (e) => {
+                alert("Error loading frame image. Please try another.");
+            };
             img.src = url;
+            // Force anonymous just in case, though base64 doesn't need it
+            img.crossOrigin = "anonymous";
         }
 
 
@@ -425,10 +431,10 @@
                         const img = new Image();
                         img.onload = () => {
                             userImg = img;
-                            // Reset position/scale logic
+                            // Reset position/scale logic (Center alignment)
                             scale = Math.max(CANVAS_SIZE / img.width, CANVAS_SIZE / img.height);
-                            posX = (CANVAS_SIZE - img.width * scale) / 2;
-                            posY = (CANVAS_SIZE - img.height * scale) / 2;
+                            posX = CANVAS_SIZE / 2;
+                            posY = CANVAS_SIZE / 2;
 
                             // Update UI
                             if (zoomRange) zoomRange.value = scale;
