@@ -155,7 +155,7 @@
         <div class="space-y-6">
 
             <!-- User Photo Upload (Priority) -->
-            <div class="flex flex-col items-center">
+            <!-- <div class="flex flex-col items-center">
                 <input type='file' id="imageLoader" class="hidden" accept="image/*" />
                 <button type="button"
                     onclick="console.log('Button clicked'); alert('Button clicked'); try { const loader = document.getElementById('imageLoader'); if(!loader){ alert('Error: imageLoader not found'); } else { console.log('Attempting click'); loader.click(); console.log('Click called'); } } catch(e) { alert('Click Error: ' + e.message); console.error(e); }"
@@ -169,7 +169,24 @@
                         আপনার ছবি আপলোড করুন
                     </span>
                 </button>
-            </div>
+            </div> -->
+
+            <label for="imageLoader" class="w-full flex flex-col items-center px-3 py-3 sm:py-4 bg-yellow-500 text-black rounded-lg shadow-lg text-sm sm:text-base uppercase cursor-pointer hover:bg-yellow-400 transition-all font-bold text-center ring-2 ring-yellow-500 ring-offset-2 ring-offset-black">
+
+                <span class="flex items-center gap-2 pointer-events-none">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2
+           l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01
+           M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6
+           a2 2 0 00-2 2v12a2 2 0 002 2z">
+                        </path>
+                    </svg>
+                    আপনার ছবি আপলোড করুন
+                </span>
+
+                <input type="file" id="imageLoader" accept="image/*" class="hidden" />
+            </label>
+
 
             <!-- Adjustment Sliders -->
             <div class="space-y-3 sm:space-y-4" id="adjustmentControls" style="display: none;">
