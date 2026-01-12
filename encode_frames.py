@@ -4,6 +4,7 @@ import json
 
 base_path = 'images'
 frames = [
+    # Order matters
     {'name': 'জুলাই সনদে হ্যাঁ বলুন', 'filename': 'Gono-bot-8.PNG'},
     {'name': 'দেশের স্বার্থ রক্ষায় "হ্যাঁ" দিন', 'filename': 'Gono-bot-1.PNG'},
     {'name': 'দেশ সংস্কারে হ্যাঁ দিন', 'filename': 'Gono-bot-2.PNG'},
@@ -14,24 +15,27 @@ frames = [
     {'name': 'দেশের মালিকানা বুঝে নিতে হ্যাঁ বলুন', 'filename': 'Gono-bot-7.PNG'}
 ]
 
-# Add the 9th frame if it exists (user had 9 in step 103)
+# Check for frame 9
 if os.path.exists(os.path.join(base_path, 'Gono-bot-9.PNG')):
     frames.append({'name': 'জুলাই সনদে হ্যাঁ বলুন', 'filename': 'Gono-bot-9.PNG'})
 
-print("const predefinedFrames = [")
+output_frames = []
 
-for i, frame in enumerate(frames):
+for frame in frames:
     path = os.path.join(base_path, frame['filename'])
     try:
         with open(path, "rb") as image_file:
             encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
-            prefix = "data:image/png;base64,"
-            # Use a slightly optimized format slightly to print
-            print(f"    {{")
-            print(f"        name: '{frame['name']}',")
-            print(f"        url: '{prefix}{encoded_string}'")
-            print(f"    }}{',' if i < len(frames)-1 else ''}")
+            output_frames.append({
+                "name": frame['name'],
+                "url": f"data:image/png;base64,{encoded_string}"
+            })
     except FileNotFoundError:
-        print(f"    // Error: Could not find {path}")
+        print(f"Error: Could not find {path}")
 
-print("];")
+# Write to JS file
+with open('frames_data.js', 'w') as outfile:
+    json_data = json.dumps(output_frames)
+    outfile.write(f"window.predefinedFrames = {json_data};")
+
+print(f"Successfully created frames_data.js with {len(output_frames)} frames.")

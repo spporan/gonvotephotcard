@@ -19,8 +19,9 @@ If you add or ensure new images in the `images/` folder:
 1. Ensure you have Python installed.
 2. Run the included script:
    ```bash
-   python3 encode_frames.py > frames_data.js
+   python3 encode_frames.py
    ```
+   This will generate/update `frames_data.js`.
 3. Refresh `index.html`.
 
-This updates the app with your new images while maintaining the "Download" functionality on local files.
+This updates the app with your new images using the optimized asynchronous loading system.

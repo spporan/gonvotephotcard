@@ -5,22 +5,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Campaign Photo Frame App</title>
+    <link rel="icon" type="image/png" href="images/Gono-bot-8.PNG">
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://gonvote.netlify.app/"> <!-- Replace with your actual URL -->
+    <meta property="og:url" content="https://gonvotephotcard.vercel.app/">
     <meta property="og:title" content="গণভোট ফটো ফ্রেম ক্যাম্পেইন">
     <meta property="og:description"
         content="জুলাই সনদে হ্যাঁ বলুন - আপনার ছবি দিয়ে ক্যাম্পেইন ফটো ফ্রেম তৈরি করুন এবং শেয়ার করুন।">
-    <meta property="og:image" content="images/Gono-bot-8.PNG">
+    <meta property="og:image" content="https://gonvotephotcard.vercel.app/images/Gono-bot-8.PNG">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://gonvote.netlify.app/">
+    <meta property="twitter:url" content="https://gonvotephotcard.vercel.app/">
     <meta property="twitter:title" content="গণভোট ফটো ফ্রেম ক্যাম্পেইন">
     <meta property="twitter:description"
         content="জুলাই সনদে হ্যাঁ বলুন - আপনার ছবি দিয়ে ক্যাম্পেইন ফটো ফ্রেম তৈরি করুন এবং শেয়ার করুন।">
-    <meta property="twitter:image" content="images/Gono-bot-8.PNG">
+    <meta property="twitter:image" content="https://gonvotephotcard.vercel.app/images/Gono-bot-8.PNG">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -229,7 +230,7 @@
         </p>
     </footer>
 
-    <script src="frames_data.js"></script>
+
     <script>
         const canvas = document.getElementById('mainCanvas');
         const ctx = canvas.getContext('2d');
@@ -242,13 +243,39 @@
 
         const CANVAS_SIZE = 1080;
 
-        // Predefined Frames
-        // Predefined Frames (Loaded from frames_data.js)
-        /* 
-           The 'predefinedFrames' array is now loaded from the external 'frames_data.js' file.
-           This file contains Base64 encoded images to allow the application to work offline 
-           and bypass browser CORS security restrictions ('Tainted Canvas') when downloading.
-        */
+        // Frame Data
+        let predefinedFrames = [];
+
+        // Load Frames Async
+        async function loadFrames() {
+            const gallery = document.getElementById('frameGallery');
+            gallery.innerHTML = '<div class="text-yellow-400 text-center w-full py-8 italic animate-pulse">ফ্রেম লোড হচ্ছে... দয়া করে অপেক্ষা করুন</div>';
+
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = 'frames_data.js';
+                script.onload = () => {
+                    if (window.predefinedFrames && window.predefinedFrames.length > 0) {
+                        predefinedFrames = window.predefinedFrames;
+                        gallery.innerHTML = ''; // Clear loading text
+                        initFrameGallery();
+
+                        // Select first frame
+                        if (predefinedFrames.length > 0) {
+                            selectFrame(0);
+                        }
+                        resolve();
+                    } else {
+                        reject('No frames found in data');
+                    }
+                };
+                script.onerror = () => {
+                    gallery.innerHTML = '<div class="text-red-400 text-center w-full py-4 text-sm">ফ্রেম লোড হতে সমস্যা হয়েছে। ইন্টারনেট কানেকশন চেক করে রিফ্রেশ দিন।</div>';
+                    reject('Script load failed');
+                };
+                document.body.appendChild(script);
+            });
+        }
 
         let userImg = null;
         let frameImg = null;
@@ -571,9 +598,9 @@
         };
 
         // Initialize on page load
-        initFrameGallery();
-        loadFrameFromUrl(predefinedFrames[0].url); // Load default frame
-        render();
+        loadFrames();
+        // initFrameGallery(); // Called by loadFrames
+        // loadFrameFromUrl(predefinedFrames[0].url); // Called by loadFrames
     </script>
 </body>
 
