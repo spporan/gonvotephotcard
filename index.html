@@ -288,13 +288,23 @@
         let lastMouseX, lastMouseY;
 
         // Initialize frame gallery
+        // Initialize frame gallery
         function initFrameGallery() {
             const gallery = document.getElementById('frameGallery');
             predefinedFrames.forEach((frame, index) => {
                 const frameBtn = document.createElement('button');
-                frameBtn.className = `flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden border-3 transition-all ${index === 0 ? 'border-yellow-400 ring-2 ring-yellow-400' : 'border-gray-600 hover:border-yellow-300'
-                    }`;
-                frameBtn.onclick = () => selectFrame(index);
+                frameBtn.type = 'button'; // Explicit type
+                frameBtn.className = `flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden border-4 transition-all ${index === 0 ? 'border-yellow-400 ring-2 ring-yellow-400' : 'border-gray-600 hover:border-yellow-300'}`;
+
+                // Handle both click and touchend for better mobile response
+                const handleSelect = (e) => {
+                    e.preventDefault(); // Prevent double triggering
+                    selectFrame(index);
+                };
+
+                frameBtn.onclick = handleSelect;
+                /* frameBtn.ontouchend = handleSelect; // Let default click handle it to avoid scroll issues */
+                // Relying on standard click which works fine on mobile if no overlay issues
 
                 const img = document.createElement('img');
                 img.src = frame.url;
@@ -309,19 +319,25 @@
 
         // Select a predefined frame
         function selectFrame(index) {
-            selectedFrameIndex = index;
-            loadFrameFromUrl(predefinedFrames[index].url);
+            try {
+                selectedFrameIndex = index;
+                if (!predefinedFrames[index]) return;
 
-            // Update visual selection
-            const gallery = document.getElementById('frameGallery');
-            const buttons = gallery.querySelectorAll('button');
-            buttons.forEach((btn, i) => {
-                if (i === index) {
-                    btn.className = 'flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden border-3 border-yellow-400 ring-2 ring-yellow-400 transition-all';
-                } else {
-                    btn.className = 'flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden border-3 border-gray-600 hover:border-yellow-300 transition-all';
-                }
-            });
+                loadFrameFromUrl(predefinedFrames[index].url);
+
+                // Update visual selection
+                const gallery = document.getElementById('frameGallery');
+                const buttons = gallery.querySelectorAll('button');
+                buttons.forEach((btn, i) => {
+                    if (i === index) {
+                        btn.className = 'flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden border-4 border-yellow-400 ring-2 ring-yellow-400 transition-all';
+                    } else {
+                        btn.className = 'flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden border-4 border-gray-600 hover:border-yellow-300 transition-all';
+                    }
+                });
+            } catch (e) {
+                console.error("Frame selection error", e);
+            }
         }
 
         // Load frame from URL
@@ -391,23 +407,36 @@
         };
 
         // Load User Photo
+        // Load User Photo (Mobile Optimized)
         imageLoader.onchange = (e) => {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                const img = new Image();
-                img.onload = () => {
-                    userImg = img;
-                    const ratio = Math.max(CANVAS_SIZE / img.width, CANVAS_SIZE / img.height);
-                    scale = ratio;
-                    posX = CANVAS_SIZE / 2;
-                    posY = CANVAS_SIZE / 2;
-                    zoomRange.value = scale;
-                    adjustmentControls.style.display = 'block';
-                    render();
+            const file = e.target.files?.[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const result = event.target?.result;
+                    if (result) {
+                        const img = new Image();
+                        img.onload = () => {
+                            userImg = img;
+                            // Reset position/scale logic
+                            scale = Math.max(CANVAS_SIZE / img.width, CANVAS_SIZE / img.height);
+                            posX = (CANVAS_SIZE - img.width * scale) / 2;
+                            posY = (CANVAS_SIZE - img.height * scale) / 2;
+
+                            // Update UI
+                            if (zoomRange) zoomRange.value = scale;
+                            if (adjustmentControls) adjustmentControls.style.display = 'block';
+
+                            render();
+                        };
+                        img.src = result;
+                    }
                 };
-                img.src = event.target.result;
-            };
-            reader.readAsDataURL(e.target.files[0]);
+                reader.readAsDataURL(file);
+
+                // Reset input to allow re-uploading the same file
+                e.target.value = '';
+            }
         };
 
         zoomRange.oninput = (e) => {
