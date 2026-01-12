@@ -156,9 +156,10 @@
 
             <!-- User Photo Upload (Priority) -->
             <div class="flex flex-col items-center">
-                <label
-                    class="w-full flex flex-col items-center px-3 py-3 sm:py-4 bg-yellow-500 text-black rounded-lg shadow-lg text-sm sm:text-base uppercase cursor-pointer hover:bg-yellow-400 transition-all font-bold text-center ring-2 ring-yellow-500 ring-offset-2 ring-offset-black relative"
-                    onclick="document.getElementById('imageLoader').click();">
+                <input type='file' id="imageLoader" class="hidden" accept="image/*" />
+                <button type="button"
+                    onclick="console.log('Button clicked'); alert('Button clicked'); try { const loader = document.getElementById('imageLoader'); if(!loader){ alert('Error: imageLoader not found'); } else { console.log('Attempting click'); loader.click(); console.log('Click called'); } } catch(e) { alert('Click Error: ' + e.message); console.error(e); }"
+                    class="w-full flex flex-col items-center px-3 py-3 sm:py-4 bg-yellow-500 text-black rounded-lg shadow-lg text-sm sm:text-base uppercase cursor-pointer hover:bg-yellow-400 transition-all font-bold text-center ring-2 ring-yellow-500 ring-offset-2 ring-offset-black relative">
                     <span class="flex items-center gap-2 pointer-events-none">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -167,10 +168,7 @@
                         </svg>
                         আপনার ছবি আপলোড করুন
                     </span>
-                    <input type='file' id="imageLoader"
-                        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" accept="image/*"
-                        onclick="event.stopPropagation();" />
-                </label>
+                </button>
             </div>
 
             <!-- Adjustment Sliders -->
@@ -415,6 +413,8 @@
         // Load User Photo
         // Load User Photo (Mobile Optimized)
         imageLoader.onchange = (e) => {
+            console.log('File selection changed');
+            alert('File selection changed');
             const file = e.target.files?.[0];
             if (file) {
                 const reader = new FileReader();
