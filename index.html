@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="bn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Campaign Photo Frame App</title>
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://gonvote.netlify.app/"> <!-- Replace with your actual URL -->
+    <meta property="og:title" content="গণভোট ফটো ফ্রেম ক্যাম্পেইন">
+    <meta property="og:description"
+        content="জুলাই সনদে হ্যাঁ বলুন - আপনার ছবি দিয়ে ক্যাম্পেইন ফটো ফ্রেম তৈরি করুন এবং শেয়ার করুন।">
+    <meta property="og:image" content="images/Gono-bot-8.PNG">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://gonvote.netlify.app/">
+    <meta property="twitter:title" content="গণভোট ফটো ফ্রেম ক্যাম্পেইন">
+    <meta property="twitter:description"
+        content="জুলাই সনদে হ্যাঁ বলুন - আপনার ছবি দিয়ে ক্যাম্পেইন ফটো ফ্রেম তৈরি করুন এবং শেয়ার করুন।">
+    <meta property="twitter:image" content="images/Gono-bot-8.PNG">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;700&display=swap');
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans Bengali', sans-serif;
+            background-color: #002218;
+            color: white;
+        }
+
+        #canvas-container {
+            touch-action: none;
+            user-select: none;
+            max-width: 100%;
+            width: 100%;
+            /* Checkerboard background for transparency preview */
+            background-image:
+                linear-gradient(45deg, #222 25%, transparent 25%),
+                linear-gradient(-45deg, #222 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #222 75%),
+                linear-gradient(-45deg, transparent 75%, #222 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+
+        .gradient-bg {
+            background: radial-gradient(circle, #004d35 0%, #002218 100%);
+        }
+
+        input[type="range"] {
+            accent-color: #fbbf24;
+            cursor: pointer;
+        }
+
+        /* Responsive Canvas Container */
+        @media (max-width: 640px) {
+            #canvas-container {
+                max-width: calc(100vw - 2rem);
+            }
+        }
+
+        @media (min-width: 641px) and (max-width: 1024px) {
+            #canvas-container {
+                max-width: 600px;
+            }
+        }
+
+        @media (min-width: 1025px) {
+            #canvas-container {
+                max-width: 700px;
+            }
+        }
+
+        /* Improve touch targets for mobile */
+        @media (max-width: 768px) {
+
+            button,
+            label {
+                min-height: 44px;
+            }
+        }
+
+        /* Animations */
+        @keyframes gradient-x {
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .animate-gradient-x {
+            animation: gradient-x 3s ease infinite;
+            background-size: 200% 200%;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen flex flex-col items-center justify-center px-4 py-6 sm:p-8 gradient-bg">
+
+    <div class="text-center mb-6 sm:mb-8 px-4 pt-4">
+        <div class="inline-block relative">
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extrabold mb-3 tracking-tight">
+                <span
+                    class="bg-clip-text text-transparent bg-gradient-to-r from-yellow-300 via-yellow-500 to-yellow-300 animate-gradient-x">
+                    গণভোট ফটো ফ্রেম ক্যাম্পেইন
+                </span>
+            </h1>
+            <div
+                class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 h-1 bg-yellow-500 rounded-full opacity-60">
+            </div>
+        </div>
+
+        <div class="mt-6 flex justify-center">
+            <p
+                class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-100/90 text-sm sm:text-base italic backdrop-blur-sm">
+                <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse"></span>
+                প্রথমে ফ্রেম নির্বাচন করুন এবং পরে আপনার ছবি আপলোড করুন
+            </p>
+        </div>
+    </div>
+
+    <!-- Main Canvas Area -->
+    <div id="canvas-container"
+        class="relative bg-black rounded-lg shadow-2xl overflow-hidden border-4 border-yellow-500/30">
+        <canvas id="mainCanvas" width="1080" height="1080" class="max-w-full h-auto cursor-move"></canvas>
+    </div>
+
+    <!-- Frame Selection Gallery -->
+    <div class="mt-4 sm:mt-6 w-full max-w-full sm:max-w-md lg:max-w-lg">
+        <h2 class="text-sm sm:text-base font-semibold text-yellow-400 mb-3 text-center">পূর্বনির্ধারিত ফ্রেম নির্বাচন
+            করুন</h2>
+        <div class="flex flex-nowrap gap-2 sm:gap-3 overflow-x-auto pb-2 px-1" id="frameGallery">
+            <!-- Frame thumbnails will be inserted here by JavaScript -->
+        </div>
+        <p class="text-xs text-gray-400 text-center mt-2">অথবা নিচে থেকে কাস্টম ফ্রেম আপলোড করুন</p>
+    </div>
+
+    <!-- Controls -->
+    <!-- Controls -->
+    <div
+        class="mt-4 sm:mt-6 lg:mt-8 w-full max-w-full sm:max-w-md lg:max-w-lg bg-black/40 backdrop-blur-md p-4 sm:p-6 rounded-2xl border border-white/10">
+        <div class="space-y-6">
+
+            <!-- User Photo Upload (Priority) -->
+            <div class="flex flex-col items-center">
+                <label
+                    class="w-full flex flex-col items-center px-3 py-3 sm:py-4 bg-yellow-500 text-black rounded-lg shadow-lg text-sm sm:text-base uppercase cursor-pointer hover:bg-yellow-400 transition-all font-bold text-center ring-2 ring-yellow-500 ring-offset-2 ring-offset-black">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
+                            </path>
+                        </svg>
+                        আপনার ছবি আপলোড করুন
+                    </span>
+                    <input type='file' id="imageLoader" class="hidden" accept="image/*" />
+                </label>
+            </div>
+
+            <!-- Adjustment Sliders -->
+            <div class="space-y-3 sm:space-y-4" id="adjustmentControls" style="display: none;">
+                <div>
+                    <label class="block text-xs sm:text-sm font-medium mb-2 text-yellow-500">ছবির জুম (Zoom)</label>
+                    <input type="range" id="zoomRange" min="0.1" max="5" step="0.01" value="1"
+                        class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer">
+                </div>
+                <p class="text-xs sm:text-sm text-gray-400 text-center">ছবিটি ফ্রেমের নিচে ড্র্যাগ করে পজিশন করুন</p>
+            </div>
+
+            <!-- Action Buttons (Share & Download) -->
+            <div class="grid grid-cols-2 gap-3 sm:gap-4">
+                <button id="shareBtn"
+                    class="w-full bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold py-3 px-2 rounded-lg transition-colors flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z">
+                        </path>
+                    </svg>
+                    <span>শেয়ার করুন</span>
+                </button>
+                <button id="downloadBtn"
+                    class="w-full bg-green-600 hover:bg-green-500 active:bg-green-700 text-white font-bold py-3 px-2 rounded-lg transition-colors flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    <span>ডাউনলোড করুন</span>
+                </button>
+            </div>
+
+            <!-- Secondary: Custom Frame Upload -->
+            <div class="pt-4 border-t border-white/10 text-center">
+                <label
+                    class="text-xs text-gray-400 hover:text-white cursor-pointer transition-colors flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
+                        </path>
+                    </svg>
+                    <span>নিজের কাস্টম ফ্রেম আপলোড করতে চান? এখানে ক্লিক করুন</span>
+                    <input type='file' id="frameLoader" class="hidden" accept="image/png" />
+                </label>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Footer Credits -->
+    <footer class="mt-8 mb-4 text-center">
+        <p class="text-xs text-slate-500 font-medium">
+            Developed by <a href="https://www.linkedin.com/in/poran/" target="_blank"
+                class="text-slate-400 hover:text-yellow-400 transition-colors duration-200">Poran</a>
+            <span class="mx-2 opacity-50">|</span>
+            Designed by <a href="https://www.facebook.com/stshairan07" target="_blank"
+                class="text-slate-400 hover:text-yellow-400 transition-colors duration-200">Sairan</a>
+        </p>
+    </footer>
+
+    <script src="frames_data.js"></script>
+    <script>
+        const canvas = document.getElementById('mainCanvas');
+        const ctx = canvas.getContext('2d');
+        const frameLoader = document.getElementById('frameLoader');
+        const imageLoader = document.getElementById('imageLoader');
+        const zoomRange = document.getElementById('zoomRange');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const shareBtn = document.getElementById('shareBtn');
+        const adjustmentControls = document.getElementById('adjustmentControls');
+
+        const CANVAS_SIZE = 1080;
+
+        // Predefined Frames
+        // Predefined Frames (Loaded from frames_data.js)
+        /* 
+           The 'predefinedFrames' array is now loaded from the external 'frames_data.js' file.
+           This file contains Base64 encoded images to allow the application to work offline 
+           and bypass browser CORS security restrictions ('Tainted Canvas') when downloading.
+        */
+
+        let userImg = null;
+        let frameImg = null;
+        let selectedFrameIndex = 0;
+
+        let scale = 1;
+        let posX = 540;
+        let posY = 540;
+        let isDragging = false;
+        let lastMouseX, lastMouseY;
+
+        // Initialize frame gallery
+        function initFrameGallery() {
+            const gallery = document.getElementById('frameGallery');
+            predefinedFrames.forEach((frame, index) => {
+                const frameBtn = document.createElement('button');
+                frameBtn.className = `flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden border-3 transition-all ${index === 0 ? 'border-yellow-400 ring-2 ring-yellow-400' : 'border-gray-600 hover:border-yellow-300'
+                    }`;
+                frameBtn.onclick = () => selectFrame(index);
+
+                const img = document.createElement('img');
+                img.src = frame.url;
+                img.alt = frame.name;
+                img.className = 'w-full h-full object-cover';
+                img.title = frame.name;
+
+                frameBtn.appendChild(img);
+                gallery.appendChild(frameBtn);
+            });
+        }
+
+        // Select a predefined frame
+        function selectFrame(index) {
+            selectedFrameIndex = index;
+            loadFrameFromUrl(predefinedFrames[index].url);
+
+            // Update visual selection
+            const gallery = document.getElementById('frameGallery');
+            const buttons = gallery.querySelectorAll('button');
+            buttons.forEach((btn, i) => {
+                if (i === index) {
+                    btn.className = 'flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden border-3 border-yellow-400 ring-2 ring-yellow-400 transition-all';
+                } else {
+                    btn.className = 'flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden border-3 border-gray-600 hover:border-yellow-300 transition-all';
+                }
+            });
+        }
+
+        // Load frame from URL
+        function loadFrameFromUrl(url) {
+            const img = new Image();
+            img.onload = () => {
+                frameImg = img;
+                render();
+            };
+            img.src = url;
+        }
+
+
+        function render() {
+            ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+
+            // 1. Draw User Image FIRST (Bottom Layer)
+            if (userImg) {
+                const drawWidth = userImg.width * scale;
+                const drawHeight = userImg.height * scale;
+                ctx.save();
+                ctx.translate(posX, posY);
+                ctx.drawImage(userImg, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+                ctx.restore();
+            } else {
+                ctx.fillStyle = "#111";
+                ctx.fillRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+                ctx.fillStyle = "#444";
+                ctx.font = "30px 'Noto Sans Bengali'";
+                ctx.textAlign = "center";
+                ctx.fillText("এখানে আপনার ছবি আসবে", CANVAS_SIZE / 2, CANVAS_SIZE / 2);
+            }
+
+            // 2. Draw Frame Image SECOND (Top Layer)
+            if (frameImg) {
+                ctx.drawImage(frameImg, 0, 0, CANVAS_SIZE, CANVAS_SIZE);
+            } else {
+                // Initial Guide
+                ctx.strokeStyle = "#fbbf24";
+                ctx.setLineDash([10, 10]);
+                ctx.strokeRect(50, 50, 980, 980);
+                ctx.fillStyle = "#fbbf24";
+                ctx.font = "bold 40px 'Noto Sans Bengali'";
+                ctx.textAlign = "center";
+                ctx.fillText("১. প্রথমে আপনার ফ্রেম (PNG) আপলোড করুন", CANVAS_SIZE / 2, 450);
+            }
+        }
+
+        // Load Transparent Frame
+        frameLoader.onchange = (e) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    frameImg = img;
+                    // Deselect all predefined frames
+                    const gallery = document.getElementById('frameGallery');
+                    const buttons = gallery.querySelectorAll('button');
+                    buttons.forEach(btn => {
+                        btn.className = 'flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden border-3 border-gray-600 hover:border-yellow-300 transition-all';
+                    });
+                    render();
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        };
+
+        // Load User Photo
+        imageLoader.onchange = (e) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    userImg = img;
+                    const ratio = Math.max(CANVAS_SIZE / img.width, CANVAS_SIZE / img.height);
+                    scale = ratio;
+                    posX = CANVAS_SIZE / 2;
+                    posY = CANVAS_SIZE / 2;
+                    zoomRange.value = scale;
+                    adjustmentControls.style.display = 'block';
+                    render();
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(e.target.files[0]);
+        };
+
+        zoomRange.oninput = (e) => {
+            scale = parseFloat(e.target.value);
+            render();
+        };
+
+        // Interaction
+        canvas.onmousedown = canvas.ontouchstart = (e) => {
+            if (!userImg) return;
+            isDragging = true;
+            const pos = getEventPos(e);
+            lastMouseX = pos.x; lastMouseY = pos.y;
+            e.preventDefault();
+        };
+
+        window.onmousemove = window.ontouchmove = (e) => {
+            if (!isDragging) return;
+            const pos = getEventPos(e);
+            const dx = pos.x - lastMouseX;
+            const dy = pos.y - lastMouseY;
+            posX += dx * (CANVAS_SIZE / canvas.offsetWidth);
+            posY += dy * (CANVAS_SIZE / canvas.offsetWidth);
+            lastMouseX = pos.x; lastMouseY = pos.y;
+            render();
+            e.preventDefault();
+        };
+
+        window.onmouseup = window.ontouchend = () => isDragging = false;
+
+        function getEventPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return { x: clientX - rect.left, y: clientY - rect.top };
+        }
+
+        // Helper functions for Sharing
+        const isFacebookInAppIOSBrowser = () => {
+            const ua = navigator.userAgent || '';
+            return /FBAN|FBAV|Instagram/i.test(ua) && /iPhone|iPad|iPod/.test(ua);
+        };
+
+        const isAndroidFacebookBrowser = () => {
+            const ua = navigator.userAgent;
+            return /FBAN|FBAV|Instagram/.test(ua) && /Android/.test(ua);
+        };
+
+        const openImageForManualSave = (blob) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const dataUrl = reader.result;
+                const win = window.open('', '_blank');
+                if (!win) return;
+                win.document.write(`<!DOCTYPE html>
+<html>
+  <head>
+    <title>Save Campaign Frame</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  </head>
+  <body style="margin:0;background:#000;display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh;padding:16px;box-sizing:border-box;font-family:system-ui,-apple-system,BlinkMacSystemFont;">
+    <img src="${dataUrl}" style="max-width:100%;height:auto;user-select:none;border-radius:8px;" />
+    <p style="color:#fff;margin-top:16px;font-size:15px;text-align:center;line-height:1.5;opacity:0.9;">
+      ফেইসবুক অ্যাপের সীমাবদ্ধতার কারণে এখান থেকে ছবি শেয়ার বা ডাউনলোড করা যাচ্ছে না।<br/>
+      সম্পূর্ণ সুবিধা পেতে অনুগ্রহ করে <b>Chrome বা অন্য কোনো ব্রাউজারে</b> পেজটি খুলুন।
+    </p>
+    <button onclick="const url = location.href.replace(/^https?:\\/\\//,'');location.href = 'intent://' + url + '#Intent;scheme=https;package=com.android.chrome;end';" style="margin-top:14px;padding:12px 18px;font-size:15px;background:#1a73e8;color:#fff;border:none;border-radius:6px;cursor:pointer;">
+      Browser দিয়ে শেয়ার করুন
+    </button>
+  </body>
+</html>`);
+                win.document.close();
+            };
+            reader.readAsDataURL(blob);
+        };
+
+        const openImageForManualSaveForFBIOS = (win, blob) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const dataUrl = reader.result;
+                win.document.write(`<!DOCTYPE html>
+<html>
+<head>
+  <title>Save Photocard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+</head>
+<body style="margin:0;background:#000;display:flex;flex-direction:column;justify-content:center;align-items:center;height:100vh;padding:16px;box-sizing:border-box;font-family: system-ui, -apple-system;">
+  <img src="${dataUrl}" style="max-width:100%;height:auto;border-radius:8px;" />
+  <p style="color:#fff;margin-top:14px;font-size:14px;text-align:center;line-height:1.5;opacity:0.9;">
+    ছবির উপর লং প্রেস করুন<br/>
+    <b>Save to Photos</b>
+  </p>
+</body>
+</html>`);
+                win.document.close();
+            };
+            reader.readAsDataURL(blob);
+        };
+
+        shareBtn.onclick = async () => {
+            if (!userImg || !frameImg) {
+                alert("দয়া করে ফ্রেম এবং নিজের ছবি—উভয়ই আপলোড করুন।");
+                return;
+            }
+
+            // Get Blob from Canvas
+            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+            if (!blob) return;
+
+            const file = new File([blob], 'campaign_result.png', { type: 'image/png' });
+
+            // 1. Android Facebook Browser Check
+            if (isAndroidFacebookBrowser()) {
+                openImageForManualSave(blob);
+                return;
+            }
+
+            // 2. Native Share
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        files: [file],
+                        title: 'Campaign Photo Frame',
+                        text: 'আমার ক্যাম্পেইন ফটো ফ্রেম!',
+                    });
+                    return;
+                } catch (error) {
+                    console.log('Share failed or cancelled', error);
+                }
+            }
+
+            // 3. Fallback (Show Alert or Manual Download)
+            alert("শেয়ার করা সম্ভব হচ্ছে না। দয়া করে 'ডাউনলোড' বাটন ব্যবহার করুন।");
+        };
+
+        downloadBtn.onclick = async () => {
+            if (!userImg || !frameImg) {
+                alert("দয়া করে ফ্রেম এবং নিজের ছবি—উভয়ই আপলোড করুন।");
+                return;
+            }
+
+            // 1. iOS Facebook: Open window immediately (synchronously)
+            let iosFBWindow = null;
+            if (isFacebookInAppIOSBrowser()) {
+                iosFBWindow = window.open('', '_blank');
+                // Even if null (blocked), we continue, but better to warn? 
+                // Mostly falls through.
+            }
+
+            // 2. Generate Blob
+            let blob = null;
+            try {
+                blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+            } catch (e) {
+                alert("ব্রাউজারের সিকিউরিটি ব্লকের কারণে ডাউনলোড করা যাচ্ছে না।");
+                if (iosFBWindow) iosFBWindow.close();
+                return;
+            }
+            if (!blob) {
+                if (iosFBWindow) iosFBWindow.close();
+                return;
+            }
+
+            // 3. Android Facebook Check
+            if (isAndroidFacebookBrowser()) {
+                if (iosFBWindow) iosFBWindow.close(); // Should not happen but safety
+                openImageForManualSave(blob);
+                return;
+            }
+
+            // 4. iOS Facebook Handling via opened window
+            if (isFacebookInAppIOSBrowser() && iosFBWindow) {
+                openImageForManualSaveForFBIOS(iosFBWindow, blob);
+                return;
+            }
+
+            // 5. Standard Download
+            try {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = 'campaign_result.png';
+                link.href = url;
+                link.click();
+                setTimeout(() => URL.revokeObjectURL(url), 100);
+            } catch (e) {
+                alert("ডাউনলোড ফেইল করেছে। দয়া করে আবার চেষ্টা করুন।");
+            }
+        };
+
+        // Initialize on page load
+        initFrameGallery();
+        loadFrameFromUrl(predefinedFrames[0].url); // Load default frame
+        render();
+    </script>
+</body>
+
+</html>
